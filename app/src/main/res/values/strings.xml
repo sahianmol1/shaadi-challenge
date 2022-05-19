@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Shaadi Challenge</string>
+    <string name="profile_info">%1$s, %2$s</string>
+    <string name="accpeted">Member Accepted</string>
+    <string name="declined">Member Declined</string>
+    <string name="something_went_wrong">Uh Oh! Something went wrong.\nPlease check your internet connection and try again</string>
+    <string name="retry">Retry</string>
+    <string name="error">Error</string>
+</resources>
