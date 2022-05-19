@@ -1,12 +1,11 @@
 package com.example.shaadichallenge.ui
 
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.shaadichallenge.R
 import com.example.shaadichallenge.databinding.ActivityMainBinding
@@ -65,18 +64,27 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewModel.isError.observe(this) { isError ->
-            if (isError) {
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.error))
-                    .setMessage(getString(R.string.something_went_wrong))
-                    .setPositiveButton(
-                        getString(R.string.retry)
-                    ) { _, _ -> viewModel.getProfiles(true) }
-                    .setNegativeButton("cancel"){_, _ -> binding.swipeRefresh.isRefreshing = false}
-                    .setCancelable(false)
-                    .show()
+        lifecycleScope.launchWhenStarted {
+            viewModel.eventFlow.collect { event ->
+                when(event) {
+                    is ShaadiViewModel.CustomEvent.ErrorEvent -> {
+                        showErrorDialog()
+                        binding.swipeRefresh.isRefreshing = false
+                    }
+                }
             }
         }
+    }
+
+    private fun showErrorDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.error))
+            .setMessage(getString(R.string.something_went_wrong))
+            .setPositiveButton(
+                getString(R.string.retry)
+            ) { _, _ -> viewModel.getProfiles(true) }
+            .setNegativeButton("cancel"){_, _ -> }
+            .setCancelable(false)
+            .show()
     }
 }

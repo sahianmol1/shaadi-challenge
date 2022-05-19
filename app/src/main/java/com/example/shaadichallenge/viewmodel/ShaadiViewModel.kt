@@ -10,6 +10,8 @@ import com.example.shaadichallenge.repository.ShaadiRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,12 +24,9 @@ class ShaadiViewModel @Inject constructor (private val repository: ShaadiReposit
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
 
-    private val _isError = MutableLiveData(false)
-    val isError: LiveData<Boolean> get() = _isError
-
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         Log.e(ShaadiViewModel::class.simpleName, throwable.message ?: "Unknown error")
-        _isError.postValue(true)
+        triggerErrorEvent()
         _isLoading.postValue(false)
     }
 
@@ -41,11 +40,21 @@ class ShaadiViewModel @Inject constructor (private val repository: ShaadiReposit
             val response = repository.getProfiles(isRefresh)
             _userProfiles.postValue(response)
             _isLoading.postValue(false)
-            _isError.postValue(false)
         }
     }
 
     fun updateProfile(profile: ShaadiProfileEntity) = viewModelScope.launch {
         _userProfiles.value = repository.updateProfile(profile)
+    }
+
+    sealed class CustomEvent{
+        object ErrorEvent: CustomEvent()
+    }
+
+    private val channel = Channel<CustomEvent>()
+    val eventFlow = channel.receiveAsFlow()
+
+    private fun triggerErrorEvent() = viewModelScope.launch {
+        channel.send(CustomEvent.ErrorEvent)
     }
 }
